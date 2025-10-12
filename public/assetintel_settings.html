@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — Asset Intelligence Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/slate/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background-color: #12161b; }
+  .sidebar { width: 250px; position: fixed; top: 0; bottom: 0; left: 0; background-color: #1b2026; padding-top: 1rem; }
+  .sidebar .nav-link { color: #c9d1d9; }
+  .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; border-radius: 6px; }
+  .content { margin-left: 250px; padding: 1.5rem; }
+  .card-surface { background-color: #1e242b; border: 1px solid #2c3239; border-radius: 10px; padding: 1rem; }
+  .navbar-dark { background-color: #1b2026 !important; }
+  .brand { font-weight: 600; font-size: 1.2rem; }
+  .form-control-dark { background-color: #1e242b; color: #fff; border: 1px solid #2c3239; }
+  .form-control-dark:focus { background-color: #1e242b; color: #fff; border-color: #0d6efd; box-shadow: none; }
+  .code-block { background-color: #0f141a; color: #0dcaf0; padding: 0.75rem; border-radius: 6px; font-family: monospace; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar d-flex flex-column p-3 text-light">
+  <div class="brand mb-3 text-center">AssetIntel Admin</div>
+  <hr class="text-secondary">
+  <nav class="nav flex-column gap-1">
+    <a href="#" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="#" class="nav-link"><i class="bi bi-hdd-network me-2"></i>Networking Scanners</a>
+    <a href="#" class="nav-link"><i class="bi bi-cpu me-2"></i>Agents</a>
+    <a href="#" class="nav-link"><i class="bi bi-laptop me-2"></i>Assets</a>
+    <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i>Reports</a>
+    <a href="#" class="nav-link active"><i class="bi bi-gear me-2"></i>Settings</a>
+  </nav>
+</aside>
+
+<main class="content text-light">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark mb-4 rounded px-3">
+    <div class="container-fluid px-0">
+      <span class="navbar-brand">Settings</span>
+
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=JD&background=0d6efd&color=fff&rounded=true&size=32" alt="User" class="rounded-circle me-2">
+          <strong>John Doe</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow">
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li><a class="dropdown-item" href="#">API Tokens</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- User Profile -->
+    <div class="col-lg-6">
+      <div class="card-surface">
+        <h5>User Profile</h5>
+        <form id="userProfileForm" class="mt-3">
+          <div class="mb-3">
+            <label for="username" class="form-label">Full Name</label>
+            <input type="text" id="username" class="form-control form-control-dark" value="John Doe">
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-control form-control-dark" value="john.doe@example.com">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" class="form-control form-control-dark" placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- API Tokens -->
+    <div class="col-lg-6">
+      <div class="card-surface">
+        <h5>API Tokens</h5>
+        <p class="text-secondary small">Create or revoke API tokens for programmatic access.</p>
+        <ul class="list-group list-group-dark mb-3" id="apiTokensList"></ul>
+        <button class="btn btn-info w-100" onclick="createToken()"><i class="bi bi-plus-lg me-1"></i>Generate New Token</button>
+      </div>
+    </div>
+
+    <!-- Platform Settings -->
+    <div class="col-12 col-lg-6">
+      <div class="card-surface">
+        <h5>Platform Settings</h5>
+        <form id="platformSettingsForm" class="mt-3">
+          <div class="mb-3">
+            <label for="refreshInterval" class="form-label">Asset Refresh Interval (minutes)</label>
+            <input type="number" id="refreshInterval" class="form-control form-control-dark" value="5" min="1">
+          </div>
+          <div class="mb-3">
+            <label for="defaultScanner" class="form-label">Default Networking Scanner</label>
+            <select id="defaultScanner" class="form-select form-control-dark">
+              <option value="scanner-dc1">scanner-dc1</option>
+              <option value="scanner-aws">scanner-aws</option>
+            </select>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="enableSNMP">
+            <label class="form-check-label" for="enableSNMP">Enable SNMP Discovery</label>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SNMP & Scan Settings -->
+    <div class="col-12 col-lg-6">
+      <div class="card-surface">
+        <h5>SNMP & Scan Settings</h5>
+        <p class="text-secondary small">Configure SNMP credentials, discovery networks, and scanning options.</p>
+        <form id="snmpSettingsForm" class="mt-3">
+          <div class="mb-3">
+            <label for="snmpVersion" class="form-label">SNMP Version</label>
+            <select id="snmpVersion" class="form-select form-control-dark">
+              <option value="2c">v2c</option>
+              <option value="3">v3</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="snmpCommunity" class="form-label">Community String (v2c)</label>
+            <input type="text" id="snmpCommunity" class="form-control form-control-dark" value="public">
+          </div>
+          <div class="mb-3">
+            <label for="snmpUser" class="form-label">SNMPv3 Username</label>
+            <input type="text" id="snmpUser" class="form-control form-control-dark" placeholder="Only for v3">
+          </div>
+          <div class="mb-3">
+            <label for="snmpAuthPass" class="form-label">SNMPv3 Auth Password</label>
+            <input type="password" id="snmpAuthPass" class="form-control form-control-dark" placeholder="Only for v3">
+          </div>
+          <div class="mb-3">
+            <label for="snmpPrivPass" class="form-label">SNMPv3 Privacy Password</label>
+            <input type="password" id="snmpPrivPass" class="form-control form-control-dark" placeholder="Only for v3">
+          </div>
+          <div class="mb-3">
+            <label for="snmpNetworks" class="form-label">Discovery Networks (CIDR)</label>
+            <textarea id="snmpNetworks" class="form-control form-control-dark" rows="3" placeholder="e.g. 10.0.0.0/24,172.16.0.0/16"></textarea>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="excludeAgents">
+            <label class="form-check-label" for="excludeAgents">Exclude assets with agents from scans</label>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Save SNMP & Scan Settings</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Fragile Devices Section -->
+    <div class="col-12">
+      <div class="card-surface">
+        <h5>Fragile Devices Protection</h5>
+        <p class="text-warning small">
+          Some devices (e.g., printers, older switches) may react poorly to aggressive scanning. Use this section to protect them.
+        </p>
+        <form id="fragileDevicesForm" class="mt-3">
+          <div class="mb-3">
+            <label for="fragilePorts" class="form-label">Service Ports to Exclude</label>
+            <input type="text" id="fragilePorts" class="form-control form-control-dark" placeholder="Comma-separated, e.g. 515,631,9100">
+            <small class="text-secondary">These ports will be skipped during scans to avoid damaging fragile devices.</small>
+          </div>
+          <div class="mb-3">
+            <label for="fragileNotes" class="form-label">Notes / Recommendations</label>
+            <textarea id="fragileNotes" class="form-control form-control-dark" rows="2" placeholder="Add any specific instructions for fragile devices"></textarea>
+          </div>
+          <button type="submit" class="btn btn-warning w-100">Save Fragile Device Settings</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="mt-4 text-secondary small text-center">
+    © 2025 Asset Intelligence Platform — Secure, Smart, Scalable
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let apiTokens = [
+    { token: "d81b6f2a-019e-445e-bbe7-97ac5a0d91aa", created: "2025-10-01 09:00" },
+    { token: "c02a1f17-6df2-47a3-88fd-fbde18ea2a5b", created: "2025-09-21 14:30" }
+  ];
+
+  function renderTokens() {
+    const list = document.getElementById("apiTokensList");
+    list.innerHTML = "";
+    apiTokens.forEach((t, idx) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      li.innerHTML = `
+        <span>${t.token} <small class="text-secondary">(${t.created})</small></span>
+        <button class="btn btn-sm btn-danger" onclick="revokeToken(${idx})"><i class="bi bi-trash"></i></button>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  function createToken() {
+    const newToken = crypto.randomUUID();
+    const now = new Date().toISOString().slice(0,16).replace("T"," ");
+    apiTokens.push({ token: newToken, created: now });
+    renderTokens();
+    alert("New API token generated! Copy it now, it won't be shown again.");
+  }
+
+  function revokeToken(index) {
+    if(confirm("Are you sure you want to revoke this token?")) {
+      apiTokens.splice(index,1);
+      renderTokens();
+    }
+  }
+
+  renderTokens();
+
+  document.getElementById("snmpSettingsForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const settings = {
+      version: document.getElementById("snmpVersion").value,
+      community: document.getElementById("snmpCommunity").value,
+      username: document.getElementById("snmpUser").value,
+      authPass: document.getElementById("snmpAuthPass").value,
+      privPass: document.getElementById("snmpPrivPass").value,
+      networks: document.getElementById("snmpNetworks").value.split(",").map(n=>n.trim()),
+      excludeAgents: document.getElementById("excludeAgents").checked
+    };
+    console.log("SNMP & Scan Settings Saved:", settings);
+    alert("SNMP & Scan settings saved successfully!");
+  });
+
+  document.getElementById("fragileDevicesForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const fragileSettings = {
+      excludedPorts: document.getElementById("fragilePorts").value.split(",").map(p=>p.trim()),
+      notes: document.getElementById("fragileNotes").value
+    };
+    console.log("Fragile Devices Settings Saved:", fragileSettings);
+    alert("Fragile devices settings saved successfully!");
+  });
+</script>
+</body>
+</html>
+

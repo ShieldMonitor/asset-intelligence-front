@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agents — Asset Intelligence Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/slate/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background-color: #12161b; }
+  .sidebar { width: 250px; position: fixed; top: 0; bottom: 0; left: 0; background-color: #1b2026; padding-top: 1rem; }
+  .sidebar .nav-link { color: #c9d1d9; }
+  .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; border-radius: 6px; }
+  .content { margin-left: 250px; padding: 1.5rem; }
+  .card-surface { background-color: #1e242b; border: 1px solid #2c3239; border-radius: 10px; padding: 1rem; }
+  .navbar-dark { background-color: #1b2026 !important; }
+  .brand { font-weight: 600; font-size: 1.2rem; }
+  .badge-online { background-color: #198754; }
+  .badge-offline { background-color: #6c757d; }
+  .code-block { background-color: #0f141a; color: #0dcaf0; padding: 0.75rem; border-radius: 6px; font-family: monospace; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar d-flex flex-column p-3 text-light">
+  <div class="brand mb-3 text-center">AssetIntel Admin</div>
+  <hr class="text-secondary">
+  <nav class="nav flex-column gap-1">
+    <a href="#" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="#" class="nav-link"><i class="bi bi-hdd-network me-2"></i>Networking Scanners</a>
+    <a href="#" class="nav-link active"><i class="bi bi-cpu me-2"></i>Agents</a>
+    <a href="#" class="nav-link"><i class="bi bi-laptop me-2"></i>Assets</a>
+    <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i>Reports</a>
+    <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i>Settings</a>
+  </nav>
+</aside>
+
+<main class="content text-light">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark mb-4 rounded px-3">
+    <div class="container-fluid px-0">
+      <span class="navbar-brand">Agents</span>
+      <form class="d-flex" role="search" style="max-width: 400px;">
+        <input id="agentSearch" class="form-control form-control-dark" type="search" placeholder="Search agents..." aria-label="Search">
+      </form>
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=JD&background=0d6efd&color=fff&rounded=true&size=32" alt="User" class="rounded-circle me-2">
+          <strong>John Doe</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow">
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li><a class="dropdown-item" href="#">API Tokens</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Registered Agents</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAgentModal">
+      <i class="bi bi-plus-lg"></i> Add Agent
+    </button>
+  </div>
+
+  <!-- Agents Table -->
+  <div class="card-surface mb-4">
+    <table class="table table-dark table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Last Seen</th>
+          <th>Assigned Scanner</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="agentTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Add Agent Modal -->
+  <div class="modal fade" id="addAgentModal" tabindex="-1" aria-labelledby="addAgentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addAgentModalLabel">Add Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addAgentForm">
+            <div class="mb-3">
+              <label for="agentName" class="form-label">Agent Name</label>
+              <input type="text" class="form-control" id="agentName" placeholder="e.g. host-01" required>
+            </div>
+            <div class="mb-3">
+              <label for="assignedScanner" class="form-label">Assigned Scanner</label>
+              <input type="text" class="form-control" id="assignedScanner" placeholder="e.g. scanner-dc1" required>
+            </div>
+            <div id="registrationInfo" style="display:none;">
+              <h6>Registration Command</h6>
+              <div class="code-block mt-2" id="agentTokenCommand"></div>
+              <p class="mt-2">Run this command on the target asset to register the agent.</p>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Generate Registration Command</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Agent Modal -->
+  <div class="modal fade" id="viewAgentModal" tabindex="-1" aria-labelledby="viewAgentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewAgentModalLabel">Agent Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Name:</strong> <span id="viewAgentName"></span></p>
+          <p><strong>Status:</strong> <span id="viewAgentStatus"></span></p>
+          <p><strong>Last Seen:</strong> <span id="viewAgentLastSeen"></span></p>
+          <p><strong>Assigned Scanner:</strong> <span id="viewAgentScanner"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-4 text-secondary small text-center">
+    © 2025 Asset Intelligence Platform — Secure, Smart, Scalable
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Mock data for agents
+  let agentsMock = [
+    { name: "host-33", status: "Online", lastSeen: "2025-10-12 10:00", scanner: "scanner-dc1" },
+    { name: "db-node-04", status: "Offline", lastSeen: "2025-10-12 09:50", scanner: "scanner-dc1" },
+    { name: "workstation-12", status: "Online", lastSeen: "2025-10-12 09:45", scanner: "scanner-aws" }
+  ];
+
+  function renderAgents() {
+    const tbody = document.getElementById("agentTableBody");
+    tbody.innerHTML = "";
+    agentsMock.forEach((agent, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${agent.name}</td>
+        <td><span class="badge ${agent.status === "Online" ? "badge-online" : "badge-offline"}">${agent.status}</span></td>
+        <td>${agent.lastSeen}</td>
+        <td>${agent.scanner}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary me-1" onclick="viewAgent(${index})" title="View Details">
+            <i class="bi bi-eye"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAgent(${index})" title="Delete Agent">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function deleteAgent(index) {
+    if(confirm("Are you sure you want to delete this agent?")) {
+      agentsMock.splice(index,1);
+      renderAgents();
+    }
+  }
+
+  function viewAgent(index) {
+    const agent = agentsMock[index];
+    document.getElementById("viewAgentName").textContent = agent.name;
+    document.getElementById("viewAgentStatus").textContent = agent.status;
+    document.getElementById("viewAgentLastSeen").textContent = agent.lastSeen;
+    document.getElementById("viewAgentScanner").textContent = agent.scanner;
+    new bootstrap.Modal(document.getElementById("viewAgentModal")).show();
+  }
+
+  // Add Agent form
+  document.getElementById("addAgentForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const name = document.getElementById("agentName").value.trim();
+    const scanner = document.getElementById("assignedScanner").value.trim();
+    if(!name || !scanner) return;
+
+    const token = crypto.randomUUID();
+    document.getElementById("agentTokenCommand").textContent = `agent-register --name ${name} --token ${token} --scanner ${scanner} --api https://api.assetintel.com`;
+    document.getElementById("registrationInfo").style.display = "block";
+
+    // Optional: Add agent to mock after registration is done
+    // For demo, we can auto-add immediately
+    const now = new Date().toISOString().slice(0,16).replace("T"," ");
+    agentsMock.push({ name, status: "Online", lastSeen: now, scanner });
+    renderAgents();
+    this.reset();
+  });
+
+  document.getElementById("agentSearch").addEventListener("input", function(){
+    const filter = this.value.toLowerCase();
+    document.querySelectorAll("#agentTableBody tr").forEach((tr, idx)=>{
+      tr.style.display = agentsMock[idx].name.toLowerCase().includes(filter) ? "" : "none";
+    });
+  });
+
+  renderAgents();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assets — Asset Intelligence Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/slate/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background-color: #12161b; }
+  .sidebar { width: 250px; position: fixed; top: 0; bottom: 0; left: 0; background-color: #1b2026; padding-top: 1rem; }
+  .sidebar .nav-link { color: #c9d1d9; }
+  .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; border-radius: 6px; }
+  .content { margin-left: 250px; padding: 1.5rem; }
+  .card-surface { background-color: #1e242b; border: 1px solid #2c3239; border-radius: 10px; padding: 1rem; }
+  .navbar-dark { background-color: #1b2026 !important; }
+  .brand { font-weight: 600; font-size: 1.2rem; }
+  .badge-online { background-color: #198754; }
+  .badge-offline { background-color: #6c757d; }
+  .badge-unmanaged { background-color: #ffc107; color: #000; }
+  .badge-unmanageable { background-color: #adb5bd; color: #000; }
+  .badge-snmp-success { background-color: #0dcaf0; color: #000; }
+  .badge-snmp-failed { background-color: #fd7e14; color: #000; }
+  .code-block { background-color: #0f141a; color: #0dcaf0; padding: 0.75rem; border-radius: 6px; font-family: monospace; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar d-flex flex-column p-3 text-light">
+  <div class="brand mb-3 text-center">AssetIntel Admin</div>
+  <hr class="text-secondary">
+  <nav class="nav flex-column gap-1">
+    <a href="#" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="#" class="nav-link"><i class="bi bi-hdd-network me-2"></i>Networking Scanners</a>
+    <a href="#" class="nav-link"><i class="bi bi-cpu me-2"></i>Agents</a>
+    <a href="#" class="nav-link active"><i class="bi bi-laptop me-2"></i>Assets</a>
+    <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i>Reports</a>
+    <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i>Settings</a>
+  </nav>
+</aside>
+
+<main class="content text-light">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark mb-4 rounded px-3">
+    <div class="container-fluid px-0">
+      <span class="navbar-brand">Assets</span>
+
+      <form class="d-flex" role="search" style="max-width: 400px;">
+        <input id="assetSearch" class="form-control form-control-dark" type="search" placeholder="Search assets..." aria-label="Search">
+      </form>
+
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=JD&background=0d6efd&color=fff&rounded=true&size=32" alt="User" class="rounded-circle me-2">
+          <strong>John Doe</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow">
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li><a class="dropdown-item" href="#">API Tokens</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Discovered Assets</h4>
+    <div class="d-flex gap-2">
+      <button class="btn btn-secondary" onclick="refreshAssets()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Assets Table -->
+  <div class="card-surface mb-4">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Hostname</th>
+          <th>IP Address</th>
+          <th>OS / Device</th>
+          <th>Management Type</th>
+          <th>Agent</th>
+          <th>Last Seen</th>
+          <th>Status</th>
+          <th>SNMP</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="assetTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- View Asset Modal -->
+  <div class="modal fade" id="viewAssetModal" tabindex="-1" aria-labelledby="viewAssetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewAssetModalLabel">Asset Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="assetDetailsBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-4 text-secondary small text-center">
+    © 2025 Asset Intelligence Platform — Secure, Smart, Scalable
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let assetsMock = [
+    {
+      hostname: "host-33",
+      ip: "10.0.0.45",
+      os: "Windows 11 Pro",
+      management: "Managed",
+      agent: "host-33",
+      lastSeen: "2025-10-12 10:15",
+      status: "Online",
+      snmpStatus: null,
+      software: ["Microsoft Edge", "Office 365", "Visual Studio Code"],
+      hardware: ["Intel i7-10700", "16 GB RAM", "512 GB SSD"]
+    },
+    {
+      hostname: "host-35",
+      ip: "10.0.0.99",
+      os: "Windows 10 Pro",
+      management: "Unmanaged",
+      agent: null,
+      lastSeen: "2025-10-12 09:55",
+      status: "Unmanaged",
+      snmpStatus: null
+    },
+    {
+      hostname: "router-dc1",
+      ip: "10.0.0.1",
+      os: "Cisco IOS XE",
+      management: "Unmanageable",
+      agent: null,
+      lastSeen: "2025-10-12 09:50",
+      status: "Unmanageable",
+      snmpStatus: "Failed"  // could be "Success" or "Failed"
+    },
+    {
+      hostname: "switch-branch1",
+      ip: "10.0.1.1",
+      os: "Cisco IOS",
+      management: "Unmanageable",
+      agent: null,
+      lastSeen: "2025-10-12 09:52",
+      status: "Unmanageable",
+      snmpStatus: "Success"
+    }
+  ];
+
+  function renderAssets() {
+    const tbody = document.getElementById("assetTableBody");
+    tbody.innerHTML = "";
+    assetsMock.forEach((a, index) => {
+      let badgeClass = a.status === "Online" ? "badge-online" :
+                       a.status === "Offline" ? "badge-offline" :
+                       a.status === "Unmanaged" ? "badge-unmanaged" :
+                       "badge-unmanageable";
+
+      let snmpBadge = a.snmpStatus === "Success" ? "badge-snmp-success" :
+                      a.snmpStatus === "Failed" ? "badge-snmp-failed" : "";
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.hostname}</td>
+        <td>${a.ip}</td>
+        <td>${a.os}</td>
+        <td>${a.management}</td>
+        <td>${a.agent || "-"}</td>
+        <td>${a.lastSeen}</td>
+        <td><span class="badge ${badgeClass}">${a.status}</span></td>
+        <td>${a.snmpStatus ? `<span class="badge ${snmpBadge}">${a.snmpStatus}</span>` : "-"}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary me-1" onclick="viewAsset(${index})" title="View Details"><i class="bi bi-eye"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAsset(${index})" title="Delete Asset"><i class="bi bi-trash"></i></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function viewAsset(index) {
+    const a = assetsMock[index];
+    let html = `
+      <h6 class="mb-3">System Information</h6>
+      <p><strong>Hostname:</strong> ${a.hostname}</p>
+      <p><strong>IP Address:</strong> ${a.ip}</p>
+      <p><strong>OS / Device:</strong> ${a.os}</p>
+      <p><strong>Management Type:</strong> ${a.management}</p>
+      <p><strong>Last Seen:</strong> ${a.lastSeen}</p>
+    `;
+
+    if(a.management === "Managed") {
+      html += `
+        <hr><h6>Agent Information</h6>
+        <p><strong>Agent ID:</strong> ${a.agent}</p>
+        <hr><h6>Installed Software</h6>
+        <ul>${a.software.map(s => `<li>${s}</li>`).join("")}</ul>
+        <hr><h6>Hardware Summary</h6>
+        <ul>${a.hardware.map(h => `<li>${h}</li>`).join("")}</ul>
+      `;
+    } else if(a.management === "Unmanaged") {
+      const token = crypto.randomUUID();
+      html += `
+        <div class="alert alert-warning mt-3">
+          <i class="bi bi-exclamation-triangle"></i> This asset does not yet have an agent installed.
+        </div>
+        <h6>Agent Installation Command</h6>
+        <div class="code-block mt-2">agent-register --name ${a.hostname} --token ${token} --api https://api.assetintel.com</div>
+        <p class="mt-2">Run this command on the asset to begin management.</p>
+      `;
+    } else {
+      let snmpInfo = a.snmpStatus ? `<p><strong>SNMP Polling Status:</strong> ${a.snmpStatus}</p>` : "";
+      html += `
+        <div class="alert alert-secondary mt-3">
+          <i class="bi bi-info-circle"></i> This device type (e.g., router or switch) is unmanageable via agent. Data is collected through network scans.
+          ${snmpInfo}
+        </div>
+      `;
+    }
+
+    document.getElementById("assetDetailsBody").innerHTML = html;
+    new bootstrap.Modal(document.getElementById("viewAssetModal")).show();
+  }
+
+  function deleteAsset(index) {
+    if(confirm("Are you sure you want to delete this asset?")) {
+      assetsMock.splice(index,1);
+      renderAssets();
+    }
+  }
+
+  function refreshAssets() {
+    renderAssets(); // Replace with API fetch later
+  }
+
+  document.getElementById("assetSearch").addEventListener("input", function(){
+    const filter = this.value.toLowerCase();
+    document.querySelectorAll("#assetTableBody tr").forEach((tr, idx)=>{
+      tr.style.display = assetsMock[idx].hostname.toLowerCase().includes(filter) ? "" : "none";
+    });
+  });
+
+  renderAssets();
+</script>
+
+</body>
+</html>
+

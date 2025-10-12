@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Networking Scanners — Asset Intelligence Platform</title>
+<link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/slate/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background-color: #12161b; }
+  .sidebar { width: 250px; position: fixed; top: 0; bottom: 0; left: 0; background-color: #1b2026; padding-top: 1rem; }
+  .sidebar .nav-link { color: #c9d1d9; }
+  .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; border-radius: 6px; }
+  .content { margin-left: 250px; padding: 1.5rem; }
+  .card-surface { background-color: #1e242b; border: 1px solid #2c3239; border-radius: 10px; padding: 1rem; }
+  .navbar-dark { background-color: #1b2026 !important; }
+  .brand { font-weight: 600; font-size: 1.2rem; }
+  .badge-online { background-color: #198754; }
+  .badge-offline { background-color: #6c757d; }
+  .code-block { background-color: #0f141a; color: #0dcaf0; padding: 0.75rem; border-radius: 6px; font-family: monospace; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar d-flex flex-column p-3 text-light">
+  <div class="brand mb-3 text-center">AssetIntel Admin</div>
+  <hr class="text-secondary">
+  <nav class="nav flex-column gap-1">
+    <a href="#" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="#" class="nav-link active"><i class="bi bi-hdd-network me-2"></i>Networking Scanners</a>
+    <a href="#" class="nav-link"><i class="bi bi-cpu me-2"></i>Agents</a>
+    <a href="#" class="nav-link"><i class="bi bi-laptop me-2"></i>Assets</a>
+    <a href="#" class="nav-link"><i class="bi bi-graph-up me-2"></i>Reports</a>
+    <a href="#" class="nav-link"><i class="bi bi-gear me-2"></i>Settings</a>
+  </nav>
+</aside>
+
+<main class="content text-light">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark mb-4 rounded px-3">
+    <div class="container-fluid px-0">
+      <span class="navbar-brand">Networking Scanners</span>
+      <form class="d-flex" role="search" style="max-width: 400px;">
+        <input id="scannerSearch" class="form-control form-control-dark" type="search" placeholder="Search scanners..." aria-label="Search">
+      </form>
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://ui-avatars.com/api/?name=JD&background=0d6efd&color=fff&rounded=true&size=32" alt="User" class="rounded-circle me-2">
+          <strong>John Doe</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow">
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li><a class="dropdown-item" href="#">API Tokens</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Registered Scanning Servers</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScannerModal">
+      <i class="bi bi-plus-lg"></i> Add Scanner
+    </button>
+  </div>
+
+  <!-- Scanners Table -->
+  <div class="card-surface mb-4">
+    <table class="table table-dark table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Last Seen</th>
+          <th>Assigned Networks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="scannerTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Add Scanner Modal -->
+  <div class="modal fade" id="addScannerModal" tabindex="-1" aria-labelledby="addScannerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addScannerModalLabel">Add Networking Scanner</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addScannerForm">
+            <div class="mb-3">
+              <label for="newScannerName" class="form-label">Scanner Name</label>
+              <input type="text" class="form-control" id="newScannerName" placeholder="e.g. scanner-dc1" required>
+            </div>
+
+            <h6>Assign Networks</h6>
+            <table class="table table-dark table-hover" id="networkTable">
+              <thead>
+                <tr>
+                  <th>Network CIDR</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addNetworkRow('networkTable')">Add Network</button>
+
+            <div id="tokenInfo" style="display:none;">
+              <h6>Registration Token</h6>
+              <div class="code-block mt-2" id="generatedToken"></div>
+              <p class="mt-2">Example command:</p>
+              <div class="code-block" id="exampleCommand"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Add Networking Scanner</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Networks Modal -->
+  <div class="modal fade" id="editNetworksModal" tabindex="-1" aria-labelledby="editNetworksModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editNetworksModalLabel">Edit Assigned Networks</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editNetworksForm">
+            <input type="hidden" id="currentScannerRowIndex">
+            <table class="table table-dark table-hover" id="editNetworkTable">
+              <thead>
+                <tr>
+                  <th>Network CIDR</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addNetworkRow('editNetworkTable')">Add Network</button>
+            <button type="submit" class="btn btn-primary w-100">Save Networks</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reveal Token Modal -->
+  <div class="modal fade" id="revealTokenModal" tabindex="-1" aria-labelledby="revealTokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card-surface">
+        <div class="modal-header">
+          <h5 class="modal-title" id="revealTokenModalLabel">Scanner Registration Token</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <h6>Token</h6>
+          <div class="code-block" id="scannerToken"></div>
+          <p class="mt-2">Example registration command:</p>
+          <div class="code-block" id="scannerTokenCommand"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-4 text-secondary small text-center">
+    © 2025 Asset Intelligence Platform — Secure, Smart, Scalable
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Mock data array
+  let scannersMock = [
+    { name: "scanner-dc1", status: "Online", lastSeen: "2025-10-12 09:45", networks: ["10.0.0.0/24","10.0.1.0/24"], token: "d81b6f2a-019e-445e-bbe7-97ac5a0d91aa" },
+    { name: "scanner-aws", status: "Offline", lastSeen: "2025-10-11 22:15", networks: ["172.31.0.0/16"], token: "c02a1f17-6df2-47a3-88fd-fbde18ea2a5b" }
+  ];
+
+  // Render scanners table
+  function renderScanners() {
+    const tbody = document.getElementById("scannerTableBody");
+    tbody.innerHTML = "";
+    scannersMock.forEach((scanner, index) => {
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-networks", JSON.stringify(scanner.networks));
+      tr.setAttribute("data-token", scanner.token);
+      tr.innerHTML = `
+        <td>${scanner.name}</td>
+        <td><span class="badge ${scanner.status === "Online" ? "badge-online" : "badge-offline"}">${scanner.status}</span></td>
+        <td>${scanner.lastSeen}</td>
+        <td>${scanner.networks.join(", ")}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary me-1" title="Edit Networks" onclick="openEditNetworksModal(this)">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          <button class="btn btn-sm btn-info me-1" title="Reveal Token" onclick="openRevealTokenModal(this)">
+            <i class="bi bi-key-fill"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" title="Delete Scanner" onclick="deleteScanner(this)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Delete scanner
+  function deleteScanner(btn) {
+    if (confirm("Are you sure you want to delete this scanner?")) {
+      const tr = btn.closest("tr");
+      const index = Array.from(tr.parentNode.children).indexOf(tr);
+      scannersMock.splice(index, 1);
+      renderScanners();
+    }
+  }
+
+  // Add network row
+  function addNetworkRow(tableId) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="text" class="form-control form-control-sm" placeholder="e.g. 10.0.2.0/24"></td>
+      <td><input type="text" class="form-control form-control-sm" placeholder="Description"></td>
+      <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  // Add Scanner form submit
+  document.getElementById("addScannerForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const name = document.getElementById("newScannerName").value.trim();
+    if(!name) return;
+
+    const networks = Array.from(document.querySelectorAll("#networkTable tbody tr input[type=text]"))
+      .map(input => input.value.trim()).filter(v => v);
+
+    const token = crypto.randomUUID();
+    const now = new Date().toISOString().slice(0,16).replace("T"," ");
+
+    // Add to mock
+    scannersMock.push({ name, status: "Online", lastSeen: now, networks, token });
+    renderScanners();
+
+    // Show token info
+    document.getElementById("tokenInfo").style.display = "block";
+    document.getElementById("generatedToken").textContent = token;
+    document.getElementById("exampleCommand").textContent = `scanner-agent --register --token ${token} --api https://api.assetintel.com`;
+
+    this.reset();
+    document.querySelector("#networkTable tbody").innerHTML = '';
+  });
+
+  // Edit Networks modal
+  function openEditNetworksModal(btn) {
+    const tr = btn.closest("tr");
+    const index = Array.from(tr.parentNode.children).indexOf(tr);
+    const networks = scannersMock[index].networks;
+
+    const tbody = document.querySelector("#editNetworkTable tbody");
+    tbody.innerHTML = '';
+    networks.forEach(net => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm" value="${net}"></td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="Description"></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">Delete</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.getElementById("currentScannerRowIndex").value = index;
+    new bootstrap.Modal(document.getElementById("editNetworksModal")).show();
+  }
+
+  document.getElementById("editNetworksForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const index = parseInt(document.getElementById("currentScannerRowIndex").value);
+    const networks = Array.from(document.querySelectorAll("#editNetworkTable tbody tr input[type=text]"))
+      .map(input => input.value.trim()).filter(v => v);
+    scannersMock[index].networks = networks;
+    renderScanners();
+    bootstrap.Modal.getInstance(document.getElementById("editNetworksModal")).hide();
+  });
+
+  // Reveal Token modal
+  function openRevealTokenModal(btn) {
+    const tr = btn.closest("tr");
+    const index = Array.from(tr.parentNode.children).indexOf(tr);
+    const token = scannersMock[index].token;
+    document.getElementById("scannerToken").textContent = token;
+    document.getElementById("scannerTokenCommand").textContent = `scanner-agent --register --token ${token} --api https://api.assetintel.com`;
+    new bootstrap.Modal(document.getElementById("revealTokenModal")).show();
+  }
+
+  // Search scanners
+  document.getElementById("scannerSearch").addEventListener("input", function(){
+    const filter = this.value.toLowerCase();
+    document.querySelectorAll("#scannerTableBody tr").forEach((tr, idx)=>{
+      tr.style.display = scannersMock[idx].name.toLowerCase().includes(filter) ? "" : "none";
+    });
+  });
+
+  // Initialize
+  renderScanners();
+</script>
+
+</body>
+</html>
+
