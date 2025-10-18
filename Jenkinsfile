@@ -22,7 +22,7 @@ pipeline {
                 // Kill any previously running instance (optional safeguard)
                 sh '''
                 pkill -f "vite" || true
-                nohup npm run dev -- --host 0.0.0.0 > vite.log 2>&1 &
+                nohup npm run dev -- --host > vite.log 2>&1 &
                 '''
             }
         }
