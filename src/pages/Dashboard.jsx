@@ -30,7 +30,7 @@ export default function Dashboard() {
         <div className="col-md-3">
           <div className="card-surface">
             <div className="text-secondary small">Pending Alerts</div>
-            <h4 className="fw-bold text-warning">7</h4>
+            <h4 className="fw-bold text-warning">20</h4>
           </div>
         </div>
       </div>
